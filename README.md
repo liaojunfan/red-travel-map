@@ -12,7 +12,7 @@
 ## 🛠️技术栈
 前端：HTML5、JavaScript、CSS
 地图服务：高德地图 JS API 2.0
-数据源：贵州省红色景点调研数据集（reddata.csv）
+数据源：黔南州红色景点调研数据集（reddata.csv）
 
 ## 📁项目文件说明
 - index.html — 项目首页
