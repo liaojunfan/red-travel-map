@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh‑CN">
+<head>
+<meta charset="utf‑8">
+<title>贵州红色文旅地图</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{display:flex;height:100vh;overflow:hidden;}
+
+/*左侧红色侧边栏 */
+.sidebar{
+    width:240px;
+    background-color:#882020;
+    color:#fff;
+    padding:20px 0;
+    overflow-y:auto;
+}
+.sidebar h2{
+    text-align:center;
+    margin-bottom:20px;
+    font-size:26px;
+    font-weight:bold;
+}
+.site-item{
+    padding:14px 16px;
+    cursor:pointer;
+}
+.site-item:hover{
+    background-color:#a62828;
+}
+.site-item.active{
+    background-color:#bb3333;
+}
+
+/*智能路线控制面板 */
+.route-panel{
+    margin:30px 15px 15px;
+    padding:16px;
+    background:#ffffff;
+    border-radius:8px;
+    color:#222;
+}
+.route-panel h3{
+    color:#882020;
+    margin-bottom:12px;
+    font-size: 22px;
+    font-weight:bold;
+}
+.route-panel label{
+    display:block;
+    margin:12px 0;
+    font-size:16px;
+}
+.btn-smart{
+    width:100%;
+    margin-top:18px;
+    padding:12px;
+    background:#882020;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size: 17px;
+}
+.btn-smart:hover{
+    background:#a62828;
+}
+
+#container{
+    flex:1;
+}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>红色景点列表</h2>
+    <div id="siteListBox"></div>
+
+    <div class="route-panel">
+        <h3>智能组合路线</h3>
+        <label><input type="radio" name="routeMode" value="nearby" checked>按地理位置距离分组</label>
+        <label><input type="radio" name="routeMode" value="theme">按红色研学主题分组</label>
+        <label><input type="radio" name="routeMode" value="day">按研学天数规划路线</label>
+        <button class="btn-smart" onclick="generateSmartRoute()">生成智能路线</button>
+    </div>
+</div>
+<div id="container"></div>
+
+<script>
+window._AMapSecurityConfig = {
+    securityJsCode:"3c2a59c147d32a70a95a3203490cd001",
+}
+</script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=18c214ca5bc17dbfd842e5ff5fca56ca"></script>
+
+<script>
+const siteData = [
+    {
+        name:"瓮安猴场会议会址",
+        lng:107.4712,
+        lat:27.0863,
+        desc:"猴场会议被称为伟大转折的前夜，红军长征重要会议旧址。"
+    },
+    {
+        name:"瓮安红军渡江遗址",
+        lng:107.4831,
+        lat:27.0452,
+        desc:"红军强渡乌江遗址，见证红军长征渡江战斗的伟大历程。"
+    },
+    {
+        name:"荔波邓恩铭故居",
+        lng:107.8921,
+        lat:25.4214,
+        desc:"中共一大代表邓恩铭的故乡，贵州红色革命先驱诞生地。"
+    },
+    {
+        name:"独山深河桥抗战遗址",
+        lng:107.5368,
+        lat:25.8033,
+        desc:"北起卢沟桥，南止深河桥，日军侵华最南端遗址。"
+    },
+    {
+        name:"都匀西山红军烈士纪念碑",
+        lng:107.5120,
+        lat:26.2640,
+        desc:"纪念途经都匀的红军战士，缅怀革命先烈。"
+    }
+];
+
+let map;
+let markerList=[];
+let polylineList=[];
+let driving;
+let infoWindow;
+
+window.onload=function(){
+    //初始中心点锁定贵阳，缩放等级8
+    map = new AMap.Map("container",{zoom:8,center:[106.63,26.65]});
+    infoWindow = new AMap.InfoWindow({offset:new AMap.Pixel(0,-30)});
+    driving = new AMap.Driving({
+        map:map,
+        autoFitView:true
+    });
+    renderSideList();
+}
+
+//渲染左侧勾选景点列表
+function renderSideList(){
+    let box = document.getElementById("siteListBox");
+    let html = "";
+    siteData.forEach((s,i)=>{
+        html +=`
+        <div class="site-item">
+            <label>
+                <input type="checkbox" value="${i}"> ${s.name}
+            </label>
+        </div>`;
+    });
+    box.innerHTML = html;
+}
+
+function generateSmartRoute(){
+    let checked = document.querySelectorAll('.sidebar input[type="checkbox"]:checked');
+    let idxArr = Array.from(checked).map(cb=>Number(cb.value));
+    if(idxArr.length<2){
+        alert("请至少勾选2个景点！");
+        return;
+    }
+    let mode = document.querySelector('input[name="routeMode"]:checked').value;
+    drawSmartRoadRoute(idxArr,mode);
+}
+
+function drawSmartRoadRoute(selectedIndex,mode){
+    markerList.forEach(m=>m.remove());
+    polylineList.forEach(p=>p.remove());
+    driving.clear();
+    infoWindow.close();
+
+    let sites = selectedIndex.map(i=>siteData[i]);
+    let groups;
+    if(mode==='nearby') groups = groupByDistance(sites);
+    else if(mode==='theme') groups = groupByTheme(sites);
+    else groups = groupByDay(sites);
+
+    groups.forEach(group=>{
+        if(group.length<2) return;
+        let waypoints = [];
+        for(let i=1;i<group.length-1;i++){
+            waypoints.push([group[i].lng,group[i].lat]);
+        }
+        driving.search(
+            [group[0].lng,group[0].lat],
+            [group[group.length-1].lng,group[group.length-1].lat],
+            {waypoints:waypoints},
+            function(status,result){
+                if(status==='complete'){
+                    console.log("路线规划成功");
+                }
+            }
+        );
+        group.forEach((site,idx)=>{
+            let marker = new AMap.Marker({
+                position:[site.lng,site.lat],
+                title:site.name,
+                map:map
+            });
+            marker.on("click",()=>{
+                infoWindow.setContent(`<h4>${site.name}</h4><p>${site.desc}</p>`);
+                infoWindow.open(map,[site.lng,site.lat]);
+            });
+            markerList.push(marker);
+        })
+    });
+    map.setFitView();
+}
+
+function groupByDistance(sites){
+    if(sites.length===0) return [];
+    let groups=[];
+    let used = new Set();
+    const distThreshold = 0.15;
+    sites.forEach((site,i)=>{
+        if(used.has(i)) return;
+        let g=[site]; used.add(i);
+        sites.forEach((other,j)=>{
+            if(used.has(j)) return;
+            let d = Math.hypot(site.lng-other.lng,site.lat-other.lat);
+            if(d<distThreshold){g.push(other);used.add(j);}
+        });
+        groups.push(g);
+    });
+    return groups;
+}
+
+function groupByTheme(sites){
+    return [sites];
+}
+
+function groupByDay(sites){
+    let day1=[],day2=[];
+    sites.forEach(s=>{
+        if(s.lat>26.5) day1.push(s);
+        else day2.push(s);
+    });
+    let res=[];
+    if(day1.length>0) res.push(day1);
+    if(day2.length>0) res.push(day2);
+    return res;
+}
+</script>
+</body>
+</html>

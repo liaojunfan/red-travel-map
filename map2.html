@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>贵州红色文旅地图</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing: border-box;
+        }
+        .container{
+            display:flex;
+            width:100vw;
+            height:100vh;
+        }
+        .sidebar{
+            width:280px;
+            height:100%;
+            background:#991220;
+            color:#ffffff;
+            overflow-y:auto;
+            padding:20px 15px;
+        }
+        .sidebar h2{
+            text-align:center;
+            margin-bottom:25px;
+            color:#ffffff;
+            font-size:22px;
+            font-weight:bold;
+            letter-spacing: 2px;
+        }
+        .site-item{
+            padding:14px 12px;
+            border-bottom: 1px solid #b9303e;
+            cursor:pointer;
+            transition: background‑color 0.3s ease;
+        }
+        .site-item:hover{
+            background:#c41522;
+        }
+        .site-item.active{
+            background:#dd2737;
+        }
+        #container{
+            flex:1;
+            height:100%;
+        }
+        .info-title{
+            background:#c81623;
+            color:white;
+            font-size:18px;
+            font-weight:bold;
+            padding:8px 12px;
+            margin:-12px -12px 10px -12px;
+            border-radius:4px 4px 0 0;
+        }
+        .info-desc{
+            font-size:16px;
+            color:#333;
+            line-height:1.6;
+        }
+        /*导航按钮样式*/
+        .nav-btn{
+            margin-top:8px;
+            background:#c81623;
+            color:white;
+            border:none;
+            padding:6px 12px;
+            border-radius:4px;
+            cursor:pointer;
+        }
+    </style>
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode:'3c2a59c147d32a70a95a3203490cd001',
+        }
+    </script>
+    <!-- 路线规划插件 -->
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=18c214ca5bc17dbfd842e5ff5fca56ca&plugin=AMap.Driving"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>红色景点列表</h2>
+            <div id="siteList"></div>
+        </div>
+        <div id="container"></div>
+    </div>
+
+    <script>
+        function bd09togcj02(bd_lon, bd_lat) {
+            const x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+            const x = bd_lon - 0.0065;
+            const y = bd_lat - 0.006;
+            let z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * x_pi);
+            let theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * x_pi);
+            let gg_lon = z * Math.cos(theta);
+            let gg_lat = z * Math.sin(theta);
+            return [gg_lon, gg_lat];
+        }
+
+        var map = new AMap.Map("container", {
+            zoom: 8,
+            center: [106.7135, 26.5783]
+        });
+        //驾车导航实例
+        var driving = new AMap.Driving({
+            map: map,
+            panel: null
+        });
+        // 用户当前位置（演示固定起点：贵阳市区）
+        var startPoint = [106.63,26.65];
+
+        const redIcon = new AMap.Icon({
+            size: new AMap.Size(32, 38),
+            image: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png",
+            imageSize: new AMap.Size(32, 38)
+        });
+
+        let markerList = [];
+        let infoWindow = new AMap.InfoWindow({offset: new AMap.Pixel(0, -30)});
+        let itemDomList = [];
+
+        fetch("http://127.0.0.1:5000/getRedSites")
+            .then(res=>res.json())
+            .then(data=>{
+                const listDom = document.getElementById("siteList");
+                data.forEach((item,index)=>{
+                    let [gcjLng,gcjLat] = bd09togcj02(item.lng,item.lat);
+                    let marker = new AMap.Marker({
+                        position:[gcjLng,gcjLat],
+                        icon:redIcon,
+                        map:map
+                    });
+                    markerList.push({marker,data:item});
+
+                    let popupContent = `
+                        <div class="info-title">${item.name}</div>
+                        <div class="info-desc">${item.intro}</div>
+                        <button class="nav-btn" onclick="startNav(${gcjLng},${gcjLat})">智能导航前往</button>
+                    `;
+                    marker.on("click",()=>{
+                        itemDomList.forEach(dom=>dom.classList.remove("active"));
+                        itemDomList[index].classList.add("active");
+                        infoWindow.setContent(popupContent);
+                        infoWindow.open(map,marker.getPosition());
+                        map.setCenter(marker.getPosition());
+                        map.setZoom(12);
+                    })
+
+                    let div = document.createElement("div");
+                    div.className = "site-item";
+                    div.innerText = item.name;
+                    itemDomList.push(div);
+                    div.onclick = ()=>{
+                        itemDomList.forEach(dom=>dom.classList.remove("active"));
+                        div.classList.add("active");
+                        infoWindow.setContent(popupContent);
+                        infoWindow.open(map,marker.getPosition());
+                        map.setCenter(marker.getPosition());
+                        map.setZoom(12);
+                    }
+                    listDom.appendChild(div);
+                })
+            })
+            .catch(err=>console.log("后端接口加载失败",err));
+
+        //导航函数
+        function startNav(endLng,endLat){
+            var endPoint = [endLng,endLat];
+            //清除旧路线
+            driving.clear();
+            //规划驾车路线
+            driving.search(startPoint,endPoint,function(status,result){
+                if(status === 'complete'){
+                    console.log("导航路线规划成功");
+                }else{
+                    alert("路线规划失败");
+                }
+            })
+        }
+    </script>
+</body>
+</html>
