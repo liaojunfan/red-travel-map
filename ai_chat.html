@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红色研学AI智能对话</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f7f3f3;
+        }
+        .container {
+            width: 900px;
+            height: 700px;
+            margin: 40px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 16px #00000026;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: #991220;
+            color: #fff;
+            text-align: center;
+            padding:18px;
+            font-size: 20px;
+            font-weight:bold;
+        }
+        .chat-body {
+            flex: 1;
+            background:#fff;
+            padding:20px;
+            overflow-y: auto;
+        }
+        .msg-item{
+            margin-bottom:18px;
+        }
+        .user-msg{
+            display:flex;
+            justify-content:flex-end;
+        }
+        .user-bubble{
+            max-width:65%;
+            background:#991220;
+            color:#ffffff;
+            padding:10px 14px;
+            border-radius:10px 10px 2px 10px;
+        }
+        .ai-msg{
+            display:flex;
+            justify-content:flex-start;
+        }
+        .ai-bubble{
+            max-width:65%;
+            background:#f1e3e4;
+            color:#222;
+            padding:10px 14px;
+            border-radius:10px 10px 10px 2px;
+            line-height:1.6;
+        }
+        .chat-footer{
+            display:flex;
+            gap:10px;
+            padding:16px;
+            background:#f7eeee;
+        }
+        #inputText{
+            flex:1;
+            padding:12px 14px;
+            border:1px solid #cc9498;
+            border-radius:8px;
+            font-size:15px;
+        }
+        #sendBtn{
+            padding: 0 24px;
+            background:#991220;
+            color:white;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:15px;
+        }
+        #sendBtn:hover{
+            background:#b81828;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="chat-header">黔南红色研学AI智能问答助手</div>
+    <div class="chat-body" id="chatBox">
+        <!-- 初始化AI欢迎消息 -->
+        <div class="msg-item ai-msg">
+            <div class="ai-bubble">
+                您好！我是黔南红色研学AI助手，可以为您介绍黔南红色点位、研学路线、革命历史相关知识。您可以提问，例如：猴场会议、邓恩铭故居、推荐研学路线。
+            </div>
+        </div>
+    </div>
+    <div class="chat-footer">
+        <input type="text" id="inputText" placeholder="请输入你的问题...">
+        <button id="sendBtn">发送</button>
+    </div>
+</div>
+
+<script>
+const chatBox = document.getElementById('chatBox');
+const inputText = document.getElementById('inputText');
+const sendBtn = document.getElementById('sendBtn');
+
+//静态知识库，模拟AI回复，纯前端，无接口
+const knowledgeBase = [
+    {
+        q:["猴场会议","猴场会议会址"],
+        a:"猴场会议于1934年12月31日至1935年1月1日在贵州瓮安猴场召开，是遵义会议的重要前奏。会议否定了“回兵湘西”的错误主张，巩固了黎平会议成果，为遵义会议召开奠定基础。"
+    },
+    {
+        q:["邓恩铭","邓恩铭故居"],
+        a:"邓恩铭是中共一大代表，水族，贵州荔波人。中国共产党早期领导人，山东党组织主要缔造者，故居位于荔波县城，是重要红色研学教育点位。"
+    },
+    {
+        q:["深河桥","深河桥抗战遗址"],
+        a:"深河桥抗战遗址位于独山，这里是抗日战争日军败退出中国国土的转折点，被称为“抗日战争最后一战”，拥有纪念馆、抗战战壕遗址，适合研学参观。"
+    },
+    {
+        q:["推荐研学路线","研学路线"],
+        a:"黔南经典红色研学路线参考：荔波邓恩铭故居 → 瓮安猴场会议会址 → 独山深河桥抗战遗址，可串联学习中共早期革命、长征历史、抗战历史。"
+    },
+    {
+        q:["黔南红色景点","红色点位"],
+        a:"黔南主要红色点位包含：猴场会议会址、邓恩铭故居、深河桥抗战遗址、江界河战斗遗址等，分布在瓮安、荔波、独山等县域。"
+    }
+];
+
+//匹配问答，简单静态关键词匹配
+function getAiReply(userInput){
+    let text = userInput.trim();
+    for(let item of knowledgeBase){
+        for(let keyword of item.q){
+            if(text.includes(keyword)){
+                return item.a;
+            }
+        }
+    }
+    return "感谢提问，本原型为静态演示版本。实际部署后将接入知识库大模型，可以回答更多黔南红色文化相关问题。";
+}
+
+//追加聊天消息
+function appendMessage(text, isUser){
+    const divItem = document.createElement('div');
+    divItem.className = "msg-item " + (isUser ? "user-msg" : "ai-msg");
+    const bubble = document.createElement('div');
+    bubble.className = isUser ? "user-bubble" : "ai-bubble";
+    bubble.innerText = text;
+    divItem.appendChild(bubble);
+    chatBox.appendChild(divItem);
+    //滚动到底部
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+//发送消息
+function sendChat(){
+    let userText = inputText.value.trim();
+    if(!userText) return;
+    appendMessage(userText,true);
+    inputText.value = "";
+    //模拟思考一小会
+    setTimeout(()=>{
+        let reply = getAiReply(userText);
+        appendMessage(reply,false);
+    },450);
+}
+
+sendBtn.addEventListener('click',sendChat);
+inputText.addEventListener('keydown',function(e){
+    if(e.key === 'Enter') sendChat();
+})
+</script>
+</body>
+</html>
