@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红色研学电子证书生成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f4f2f2;
+            font-family: "SimSun", "Microsoft YaHei", serif;
+            padding:30px 15px;
+        }
+        .wrap{
+            max-width:1100px;
+            margin:0 auto;
+        }
+        .form-box{
+            background:#fff;
+            padding:24px;
+            border-radius:10px;
+            box-shadow:0 2px 12px rgba(0,0,0,0.1);
+            margin-bottom:30px;
+        }
+        .form-row{
+            display:flex;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:16px;
+        }
+        .form-item{
+            flex:1;
+            min-width:200px;
+        }
+        label{
+            display:block;
+            margin-bottom:6px;
+            color:#701216;
+            font-weight:bold;
+        }
+        input{
+            width:100%;
+            padding:10px 12px;
+            border:1px solid #d4b2b4;
+            border-radius:6px;
+            font-size:15px;
+        }
+        #genBtn{
+            background:#8C1C24;
+            color:#fff;
+            border:none;
+            padding:11px 32px;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+        }
+        #genBtn:hover{
+            background:#a8232d;
+        }
+
+        /* ==========证书样式 A4打印尺寸 ========== */
+        .cert-wrap{
+            width:842px;
+            height:595px;
+            margin:0 auto;
+            background:#fff8f8;
+            border:10px solid #8C1C24;
+            position:relative;
+            padding:40px 60px;
+            box-shadow:0 4px 18px rgba(140,28,36,0.22);
+        }
+        /* 水印底纹 */
+        .cert-wrap::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background-image: radial-gradient(#d8b5b8 7%, transparent 7%);
+            background-size:35px 35px;
+            opacity:0.12;
+            pointer-events:none;
+        }
+        .cert-header{
+            text-align:center;
+        }
+        .cert-big-title{
+            font-size:42px;
+            color:#8C1C24;
+            font-weight:bold;
+            letter-spacing:6px;
+        }
+        .cert-subtitle{
+            font-size:20px;
+            color:#701216;
+            margin-top:10px;
+            letter-spacing:2px;
+        }
+        .cert-body{
+            margin-top:45px;
+            font-size:22px;
+            line-height:2.2;
+            color:#222;
+        }
+        .name-text{
+            color:#8C1C24;
+            font-weight:bold;
+            font-size:26px;
+        }
+        .theme-text{
+            color:#8C1C24;
+            font-weight:bold;
+        }
+        .cert-footer{
+            position:absolute;
+            right:60px;
+            bottom:45px;
+            text-align:right;
+        }
+        .unit-text{
+            font-size:20px;
+            color:#222;
+        }
+        .date-text{
+            margin-top:8px;
+            font-size:20px;
+            color:#222;
+        }
+        .seal-box{
+            position:absolute;
+            right:70px;
+            bottom:110px;
+            width:110px;
+            height:110px;
+            border:4px solid #991220;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#991220;
+            font-weight:bold;
+            font-size:17px;
+            transform:rotate(-12deg);
+        }
+
+        /*打印的时候去除页面阴影边框 */
+        @media print {
+            body{background:#fff;padding:0;}
+            .form-box{display:none !important;}
+            .cert-wrap{
+                box-shadow:none;
+                border:8px solid #8C1C24;
+                width:100%;
+                height:auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <!-- 表单输入区域 -->
+    <div class="form-box">
+        <div class="form-row">
+            <div class="form-item">
+                <label>研学人员姓名</label>
+                <input id="inpName" placeholder="请输入姓名">
+            </div>
+            <div class="form-item">
+                <label>研学单位/学校</label>
+                <input id="inpOrg" placeholder="例如：XX中学 / XX党支部">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-item">
+                <label>研学活动主题</label>
+                <input id="inpTheme" value="黔南红色文化实践研学活动">
+            </div>
+            <div class="form-item">
+                <label>研学完成日期</label>
+                <input id="inpDate" type="date">
+            </div>
+        </div>
+        <button id="genBtn">🔖 生成研学电子证书</button>
+        <p style="margin-top:12px;color:#666;">💡生成后浏览器按Ctrl+P，可直接另存为PDF打印证书</p>
+    </div>
+
+
+    <!-- 证书展示区域 -->
+    <div class="cert-wrap" id="certBox">
+        <div class="cert-header">
+            <div class="cert-big-title">研 学 证 书</div>
+            <div class="cert-subtitle">黔南红色文旅智能导航系统</div>
+        </div>
+        <div class="cert-body">
+            <p>兹证明：<span class="name-text" id="showName">__________</span>同学/同志，</p>
+            <p>完成<span class="theme-text" id="showTheme">黔南红色文化实践研学活动</span>，</p>
+            <p>通过线上红色点位学习、红色遗址实地参观研学，</p>
+            <p>学习长征历史与黔南革命先辈事迹，完成本次全部研学学习任务。</p>
+            <p>特发此证，以资鼓励。</p>
+        </div>
+        <div class="seal-box">研学专用<br>电子印章</div>
+        <div class="cert-footer">
+            <div class="unit-text" id="showOrg">___________</div>
+            <div class="date-text" id="showDate">____年__月__日</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inpName = document.getElementById("inpName");
+    const inpOrg = document.getElementById("inpOrg");
+    const inpTheme = document.getElementById("inpTheme");
+    const inpDate = document.getElementById("inpDate");
+
+    const showName = document.getElementById("showName");
+    const showOrg = document.getElementById("showOrg");
+    const showTheme = document.getElementById("showTheme");
+    const showDate = document.getElementById("showDate");
+
+    document.getElementById("genBtn").addEventListener("click",()=>{
+        showName.innerText = inpName.value || "__________";
+        showOrg.innerText = inpOrg.value || "___________";
+        showTheme.innerText = inpTheme.value;
+        showDate.innerText = inpDate.value || "____年__月__日";
+    })
+</script>
+</body>
+</html>
