@@ -8,11 +8,12 @@
 ## 🌐线上预览地址
 👉 https://liaojunfan.github.io/red-travel-map/map.html
 👉 https://liaojunfan.github.io/red-travel-map/ai_chat.html
+👉 https://liaojunfan.github.io/red-travel-map/cert.html
 
 ## 🛠️技术栈
 前端：HTML5、JavaScript、CSS
 地图服务：高德地图 JS API 2.0
-数据源：黔南州红色景点调研数据集（reddata.csv）
+数据源：黔南州红色景点调研数据集
 
 ## 📁项目文件说明
 - index.html — 项目首页
@@ -20,6 +21,7 @@
 - app.py — Python后端数据处理脚本
 - reddata.csv — 红色研学点位原始数据集
 - ai_chat.html — 黔南红色研学AI助手页面
+- cert.html — 研学电子证书页面
 
 ## 💻本地部署教程
 1. 克隆或下载仓库全部代码
@@ -37,4 +39,5 @@
 - 线上可访问交互演示系统
 - 红色研学点位数据集
 - 黔南红色研学AI助手
+- 红色研学电子证书
 - 完整开源源代码
