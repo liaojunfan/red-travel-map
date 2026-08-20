@@ -12,8 +12,41 @@
         }
         body{
             font-family: "Microsoft YaHei",SimHei,sans-serif;
-            background-color: #f8f4f4;
             color:#333;
+            /*背景取消底色，让图片色彩完整显示*/
+            position: relative;
+            background-color: transparent;
+        }
+        /*全屏背景轮播层*/
+        .bg-slideshow{
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            z-index:-2;
+        }
+        .bg-slideshow .slide-item{
+            position:absolute;
+            width:100%;
+            height:100%;
+            background-size: cover;
+            background-position:center;
+            opacity:0;
+            transition: opacity 1s ease;
+        }
+        .bg-slideshow .slide-item.active{
+            opacity: 1;
+        }
+        /*低透明度暗色遮罩，保留背景原图鲜艳色彩，不再发灰发白*/
+        .bg-mask{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background-color:rgba(0,0,0,0.12);
+            z-index:-1;
         }
         /*头部横幅 */
         .banner{
@@ -43,6 +76,35 @@
             opacity:0.9;
             letter-spacing:2px;
         }
+
+        /* ==========图片无缝横向滚动区域 ========== */
+        .scroll-wrap{
+            overflow:hidden;
+            width:100%;
+            background:#fff;
+            padding:16px 0;
+        }
+        .scroll-inner{
+            display:flex;
+            gap:18px;
+            animation: scrollMove 28s linear infinite;
+        }
+        .scroll-inner img{
+            height:220px;
+            width:auto;
+            object-fit:cover;
+            border-radius:8px;
+            box-shadow: 0 2px 10px #00000022;
+        }
+        @keyframes scrollMove{
+            0%{transform: translateX(0);}
+            100%{transform: translateX(-50%);}
+        }
+        /*鼠标悬停停止滚动 */
+        .scroll-wrap:hover .scroll-inner{
+            animation-play-state:paused;
+        }
+
         .container{
             max-width:1140px;
             margin:50px auto;
@@ -53,7 +115,7 @@
             border-left:6px solid #8c1c24;
             padding:24px 28px;
             border-radius:0 10px 10px 0;
-            margin-bottom:45px;
+            margin-bottom:85px;
             box-shadow:0 2px 12px rgba(0,0,0,0.08);
         }
         .intro-block h3{
@@ -70,12 +132,13 @@
         .card-wrap{
             display:grid;
             grid-template-columns: repeat(auto-fit,minmax(310px,1fr));
-            gap:32px;
+            gap:85px 32px;
         }
         .func-card{
-            background:#ffffff;
+            position:relative;
+            /*卡片轻微透明，透出下方彩色背景*/
+            background:rgba(255,255,255,0.96);
             border-radius:16px;
-            overflow:hidden;
             box-shadow:0 4px 16px rgba(140,28,36,0.14);
             transition: all 0.3s ease;
         }
@@ -83,11 +146,73 @@
             transform: translateY(-8px);
             box-shadow:0 10px 28px rgba(140,28,36,0.22);
         }
+
+        /* ===== 4个带文字环绕小球 放大尺寸+加大环绕半径 ===== */
+        .decor-ball{
+            width:72px;
+            height:72px;
+            border-radius:50%;
+            background:rgba(140, 28, 36,0.25);
+            position:absolute;
+            z-index:10;
+            pointer-events:none;
+            /*文字居中设置*/
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:15px;
+            font-weight:bold;
+            color:#78141b;
+        }
+        .ball-1{
+            top:-90px;
+            left:50%;
+            animation:orbit1 9s linear infinite;
+        }
+        .ball-2{
+            top:-90px;
+            left:50%;
+            animation:orbit2 10s linear infinite;
+        }
+        .ball-3{
+            top:-90px;
+            left:50%;
+            animation:orbit3 8s linear infinite;
+        }
+        .ball-4{
+            top:-90px;
+            left:50%;
+            animation:orbit4 11s linear infinite;
+        }
+        .func-card:hover .decor-ball{
+            animation-duration:4.5s;
+        }
+        /*环绕半径140px，移动幅度大 */
+        @keyframes orbit1{
+            0%{ transform: rotate(0deg) translateX(140px) rotate(0deg); }
+            100%{ transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+        }
+        @keyframes orbit2{
+            0%{ transform: rotate(0deg) translateX(-130px) rotate(0deg); }
+            100%{ transform: rotate(-360deg) translateX(-130px) rotate(360deg); }
+        }
+        @keyframes orbit3{
+            0%{ transform: rotate(0deg) translateX(145px) rotate(0deg); }
+            100%{ transform: rotate(360deg) translateX(145px) rotate(-360deg); }
+        }
+        @keyframes orbit4{
+            0%{ transform: rotate(0deg) translateX(-135px) rotate(0deg); }
+            100%{ transform: rotate(-360deg) translateX(-135px) rotate(360deg); }
+        }
+
         .card-head{
+            position:relative;
+            z-index:2;
             background-color:#8c1c24;
             color:#fff;
             padding:22px;
             text-align:center;
+            border-radius:16px 16px 0 0;
         }
         .card-head h2{
             font-size:22px;
@@ -95,6 +220,8 @@
         }
         .card-body{
             padding:26px 22px;
+            position:relative;
+            z-index:2;
         }
         .card-desc{
             font-size:15px;
@@ -105,6 +232,7 @@
         .card-footer{
             text-align:center;
             margin-top:22px;
+            padding-bottom:20px;
         }
         .card-footer a{
             display:inline-block;
@@ -122,26 +250,59 @@
             margin-top:70px;
             padding:28px;
             text-align:center;
-            background:#ebe3e4;
+            background:rgba(235,227,228,0.85);
             color:#666;
             font-size:14px;
         }
     </style>
 </head>
 <body>
+    <!-- 全屏背景轮播 -->
+    <div class="bg-slideshow">
+        <div class="slide-item active" style="background-image:url('picture/picture7.jpg')"></div>
+        <div class="slide-item" style="background-image:url('picture/picture8.jpg')"></div>
+        <div class="slide-item" style="background-image:url('picture/picture9.jpg')"></div>
+        <div class="slide-item" style="background-image:url('picture/picture10.jpg')"></div>
+        <div class="slide-item" style="background-image:url('picture/picture11.jpg')"></div>
+    </div>
+    <div class="bg-mask"></div>
+
     <div class="banner">
         <h1>黔南州红色文旅智能导航系统</h1>
         <div class="banner-sub">—— 助力基层乡村振兴发展</div>
     </div>
 
+    <!-- 图片无缝横向滚动模块 -->
+    <div class="scroll-wrap">
+        <div class="scroll-inner">
+            <!--第一组原图-->
+            <img src="picture/picture1.jpg" alt="黔南风光">
+            <img src="picture/picture2.jpg" alt="黔南红色场馆">
+            <img src="picture/picture3.jpg" alt="黔南山水">
+            <img src="picture/picture4.jpg" alt="黔南河谷">
+            <img src="picture/picture5.jpg" alt="黔南星空">
+            <img src="picture/picture6.jpg" alt="黔南瀑布">
+            <!--复制一遍图片，实现无缝循环效果，不要删掉-->
+            <img src="picture/picture1.jpg" alt="黔南风光">
+            <img src="picture/picture2.jpg" alt="黔南红色场馆">
+            <img src="picture/picture3.jpg" alt="黔南山水">
+            <img src="picture/picture4.jpg" alt="黔南河谷">
+            <img src="picture/picture5.jpg" alt="黔南星空">
+            <img src="picture/picture6.jpg" alt="黔南瀑布">
+        </div>
+    </div>
+
     <div class="container">
         <div class="intro-block">
             <h3>项目简介</h3>
-            <p>本项目由黔南青年志愿科创服务队打造，聚焦黔南州红色文旅资源数字化短板，融合历史学考据与计算机技术，打造集红色点位地图导航、AI红色研学问答、研学电子证书生成于一体的Web原型系统。面向党建学习、中小学研学、自助游客群体，激活乡镇零散红色资源，传承红色文化，以青年科创赋能乡村文旅振兴。</p>
+            <p>本项目由黔南青年志愿科创服务队打造，聚焦黔南州红色文旅资源数字化短板，融合历史学考据与计算机技术，打造集红色点位地图导航、AI红色研学问答、研学电子证书生成于一体的Web原型系统。面向党建学习、中小学研学、自助游客群体，激活乡镇零散红色资源，传承红色文化，以数字科创赋能乡村文旅振兴。</p>
         </div>
 
         <div class="card-wrap">
+            <!--卡片1 智能导航地图 -->
             <div class="func-card">
+                <div class="decor-ball ball-1">奉献</div>
+                <div class="decor-ball ball-2">友爱</div>
                 <div class="card-head">
                     <h2>智能导航地图</h2>
                 </div>
@@ -155,13 +316,16 @@
                 </div>
             </div>
 
+            <!--卡片2 智能研学对话 -->
             <div class="func-card">
+                <div class="decor-ball ball-3">互助</div>
+                <div class="decor-ball ball-4">进步</div>
                 <div class="card-head">
                     <h2>智能研学对话</h2>
                 </div>
                 <div class="card-body">
                     <div class="card-desc">
-                        黔南红色研学AI助手。可查询革命史实、红色点位背景资料，获取研学路线方案，解答长征历史、黔南抗战历史相关研学提问。
+                        黔南红色研学AI助手。可查询革命史实、红色点位背景资料，智能生成研学路线方案，解答长征历史、黔南抗战历史相关研学提问。
                     </div>
                     <div class="card-footer">
                         <a href="ai_chat.html">进入AI问答助手</a>
@@ -169,6 +333,7 @@
                 </div>
             </div>
 
+            <!--卡片3 红色研学证书生成 -->
             <div class="func-card">
                 <div class="card-head">
                     <h2>红色研学证书生成</h2>
@@ -189,5 +354,17 @@
         © 黔南青年志愿科创服务队｜原型演示系统
         <br>GitHub Pages静态网页演示
     </footer>
+
+    <script>
+        //========背景轮播参数 停留5000ms(5秒)，过渡1000ms(1秒)========
+        const stayTime = 5000;
+        const slides = document.querySelectorAll('.slide-item');
+        let currentIndex = 0;
+        setInterval(()=>{
+            slides[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % slides.length;
+            slides[currentIndex].classList.add('active');
+        }, stayTime + 1000);
+    </script>
 </body>
 </html>
