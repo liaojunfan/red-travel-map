@@ -6,6 +6,7 @@
 旨在助力中小学生、企事业单位规划红色研学路线，推动红色文化数字化传播。
 
 ## 🌐线上预览地址
+👉 https://liaojunfan.github.io/red-travel-map
 👉 https://liaojunfan.github.io/red-travel-map/map.html
 👉 https://liaojunfan.github.io/red-travel-map/ai_chat.html
 👉 https://liaojunfan.github.io/red-travel-map/cert.html
